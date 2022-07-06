@@ -12,8 +12,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: vaccine-issuer-agent-ingress
-  namespace: vaccine-issuer
+  name: address-issuer-agent-ingress
+  namespace: address-issuer
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -30,6 +30,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: vaccine-issuer-agent
+            name: address-issuer-agent
             port:
               number: 8000

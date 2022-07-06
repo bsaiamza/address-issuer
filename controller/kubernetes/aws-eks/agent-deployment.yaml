@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vaccine-issuer-agent
-  namespace: vaccine-issuer
+  name: address-issuer-agent
+  namespace: address-issuer
   labels:
-    app: vaccine-issuer-agent
+    app: address-issuer-agent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vaccine-issuer-agent
+      app: address-issuer-agent
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,10 +19,10 @@ spec:
   template:
     metadata:
       labels:
-        app: vaccine-issuer-agent
+        app: address-issuer-agent
     spec:
       containers:
-        - name: vaccine-issuer-agent
+        - name: address-issuer-agent
           image: bcgovimages/aries-cloudagent:py36-1.16-1_0.7.3
           imagePullPolicy: Always
           ports:
@@ -34,7 +34,7 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: vaccine-issuer-agent-configmap
+                name: address-issuer-agent-configmap
           command: [
               "/bin/bash",
               "-c",

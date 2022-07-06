@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vaccine-issuer-agent
-  namespace: vaccine-issuer
+  name: address-issuer-agent
+  namespace: address-issuer
 spec:
   type: ClusterIP         # Default type (ClusterIP), NodePort, LoadBalancer
   selector:
-    app: vaccine-issuer-agent
+    app: address-issuer-agent
   ports:
     - name: admin-port
       port: 8001          #service port http
@@ -19,8 +19,8 @@ spec:
       protocol: TCP
 
 
-# kubectl port-forward service/cornerstone-issuer-agent 8180:8180 -n cornerstone-issuer
-# kubectl port-forward deployment.apps/cornerstone-issuer-agent 8180:8180 -n cornerstone-issuer
+# kubectl port-forward service/address-issuer-agent 8180:8180 -n address-issuer
+# kubectl port-forward deployment.apps/address-issuer-agent 8180:8180 -n address-issuer
 
 # localhost:8180/ 
 

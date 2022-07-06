@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vaccine-issuer
-  namespace: vaccine-issuer
+  name: address-issuer
+  namespace: address-issuer
   labels:
-    app: vaccine-issuer
+    app: address-issuer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vaccine-issuer
+      app: address-issuer
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,11 +19,11 @@ spec:
   template:
     metadata:
       labels:
-        app: vaccine-issuer
+        app: address-issuer
     spec:
       containers:
-        - name: vaccine-issuer
-          image: 149875424875.dkr.ecr.af-south-1.amazonaws.com/vaccine-issuer:0.0.1
+        - name: address-issuer
+          image: 149875424875.dkr.ecr.af-south-1.amazonaws.com/address-issuer:0.0.1
           imagePullPolicy: Always
           ports:
             - name: server-port
@@ -37,4 +37,4 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: vaccine-issuer-configmap
+                name: address-issuer-configmap
