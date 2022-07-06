@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cornerstone-issuer-agent
-  namespace: cornerstone-issuer
+  name: vaccine-issuer-agent
+  namespace: vaccine-issuer
 spec:
   type: ClusterIP         # Default type (ClusterIP), NodePort, LoadBalancer
   selector:
-    app: cornerstone-issuer-agent
+    app: vaccine-issuer-agent
   ports:
     - name: admin-port
       port: 8001          #service port http

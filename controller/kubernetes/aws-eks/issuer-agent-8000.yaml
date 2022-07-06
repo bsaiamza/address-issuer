@@ -7,13 +7,13 @@
 # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/tasks/ssl_redirect/
 
 ---
-# https://issuer-agent.iamza-sandbox.com
+# https://vacissuer-agent.iamza-sandbox.com
 # k8s-cornerst-cornerst-cf2537e9df
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cornerstone-issuer-agent-ingress
-  namespace: cornerstone-issuer
+  name: vaccine-issuer-agent-ingress
+  namespace: vaccine-issuer
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -30,6 +30,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: cornerstone-issuer-agent
+            name: vaccine-issuer-agent
             port:
               number: 8000

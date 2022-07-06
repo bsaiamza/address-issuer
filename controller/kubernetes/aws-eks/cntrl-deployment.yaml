@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cornerstone-issuer
-  namespace: cornerstone-issuer
+  name: vaccine-issuer
+  namespace: vaccine-issuer
   labels:
-    app: cornerstone-issuer
+    app: vaccine-issuer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cornerstone-issuer
+      app: vaccine-issuer
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,11 +19,11 @@ spec:
   template:
     metadata:
       labels:
-        app: cornerstone-issuer
+        app: vaccine-issuer
     spec:
       containers:
-        - name: cornerstone-issuer
-          image: 149875424875.dkr.ecr.af-south-1.amazonaws.com/cornerstone-issuer:0.0.5
+        - name: vaccine-issuer
+          image: 149875424875.dkr.ecr.af-south-1.amazonaws.com/vaccine-issuer:0.0.1
           imagePullPolicy: Always
           ports:
             - name: server-port
@@ -37,4 +37,4 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: cornerstone-issuer-configmap
+                name: vaccine-issuer-configmap

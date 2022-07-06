@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cornerstone-issuer-agent
-  namespace: cornerstone-issuer
+  name: vaccine-issuer-agent
+  namespace: vaccine-issuer
   labels:
-    app: cornerstone-issuer-agent
+    app: vaccine-issuer-agent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cornerstone-issuer-agent
+      app: vaccine-issuer-agent
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,10 +19,10 @@ spec:
   template:
     metadata:
       labels:
-        app: cornerstone-issuer-agent
+        app: vaccine-issuer-agent
     spec:
       containers:
-        - name: cornerstone-issuer-agent
+        - name: vaccine-issuer-agent
           image: bcgovimages/aries-cloudagent:py36-1.16-1_0.7.3
           imagePullPolicy: Always
           ports:
@@ -34,7 +34,7 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: cornerstone-issuer-agent-configmap
+                name: vaccine-issuer-agent-configmap
           command: [
               "/bin/bash",
               "-c",
