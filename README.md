@@ -2,7 +2,7 @@
 
 Digital Identity is the identity use case of verifiable credentials as a implementation of the technology of HyperLedger Indy, HyperLedger URSA and Hyperledger Aries.
 
-- This use case involves issuing a physical address digital credential.
+- This use case involves issuing digital credential representing a physical address.
 
 ## Directory structure
 
