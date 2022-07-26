@@ -11,7 +11,6 @@ Digital Identity is the identity use case of verifiable credentials as a impleme
 ├── api             // handlers, router (endpoints) and ui (production build)
 ├── cmd             // server entry point
 ├── deploy          // k8s aws deployment files
-├── cmd             // entry point
 ├── pkg
 │   ├── client      // ACA-py client functions
 │   ├── config      // config loading env variables
