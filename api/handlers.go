@@ -476,8 +476,8 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 								Value: userInfo.IDNumber,
 							},
 							{
-								Name:  "Forenames",
-								Value: userInfo.Forenames,
+								Name:  "First Names",
+								Value: userInfo.FirstNames,
 							},
 							{
 								Name:  "Surname",
@@ -492,16 +492,16 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 								Value: userInfo.StatementDate,
 							},
 							{
-								Name:  "Street 1",
-								Value: userInfo.Street1,
+								Name:  "Address Line 1",
+								Value: userInfo.AddressLine1,
 							},
 							{
-								Name:  "Street 2",
-								Value: userInfo.Street2,
+								Name:  "Address Line 2",
+								Value: userInfo.AddressLine2,
 							},
 							{
-								Name:  "Street 3",
-								Value: userInfo.Street3,
+								Name:  "Address Line 3",
+								Value: userInfo.AddressLine3,
 							},
 							{
 								Name:  "City",

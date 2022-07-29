@@ -7,13 +7,13 @@ metadata:
 data:
   # acapy variables
   ACAPY_URL: "http://address-issuer-agent.address-issuer.svc.cluster.local:8001" # socket - ?
+  SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:1.1"
+  SCHEMA_NAME: "Physical_Address_Credential"
+  SCHEMA_VERSION: "1.1"
+  CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:52293:IAMZA Physical Address Credential"
+  PUBLIC_DID: "Y8X9iqAn2kYN5cce3Jgcjp"
   # ACAPY_ADMIN_API_KEY: secret
   # client variables
   # CLIENT_URL: "http://address-issuer-agent.address-issuer.svc.cluster.local:3000" # socket
   # server variables
   SERVER_ADDRESS: 0.0.0.0:8180
-  SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:1.0"
-  SCHEMA_NAME: "Physical_Address_Credential"
-  SCHEMA_VERSION: "1.0"
-  CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:51757:IAMZA Physical Address Credential"
-  PUBLIC_DID: "Y8X9iqAn2kYN5cce3Jgcjp"

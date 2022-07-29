@@ -64,13 +64,13 @@ const GetCredentialEmailForm = () => {
         <FormikComponent
           initialValues={{
             id_number: '',
-            forenames: '',
+            first_names: '',
             surname: '',
             statement_issuer: '',
             statement_date: '',
-            street_1: '',
-            street_2: '',
-            street_3: '',
+            address_line_1: '',
+            address_line_2: '',
+            address_line_3: '',
             city: '',
             postal_code: '',
             expiry_date: '',
@@ -99,11 +99,11 @@ const GetCredentialEmailForm = () => {
               </div>
               <div>
                 <TextFieldComponent
-                  id="forenames"
-                  name="forenames"
-                  value={values.forenames}
+                  id="first_names"
+                  name="first_names"
+                  value={values.first_names}
                   onChange={handleChange}
-                  label="Forenames"
+                  label="First Names"
                   sx={{ m: '1rem' }}
                   required
                 />
@@ -159,32 +159,32 @@ const GetCredentialEmailForm = () => {
 
               <div>
                 <TextFieldComponent
-                  id="street_1"
-                  name="street_1"
-                  value={values.street_1}
+                  id="address_line_1"
+                  name="address_line_1"
+                  value={values.address_line_1}
                   onChange={handleChange}
-                  label="Street 1"
+                  label="Address Line 1"
                   sx={{ m: '1rem' }}
                   required
                 />
 
                 <TextFieldComponent
-                  id="street_2"
-                  name="street_2"
-                  value={values.street_2}
+                  id="address_line_2"
+                  name="address_line_2"
+                  value={values.address_line_2}
                   onChange={handleChange}
-                  label="Street 2"
+                  label="Address Line 2"
                   sx={{ m: '1rem' }}
                 />
               </div>
 
               <div>
                 <TextFieldComponent
-                  id="street_3"
-                  name="street_3"
-                  value={values.street_3}
+                  id="address_line_3"
+                  name="address_line_3"
+                  value={values.address_line_3}
                   onChange={handleChange}
-                  label="Street 3"
+                  label="Address Line 3"
                   sx={{ m: '1rem' }}
                 />
 
