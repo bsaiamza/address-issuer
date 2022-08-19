@@ -8,7 +8,7 @@ import {
 } from '@mui/material'
 import { toast } from 'react-toastify'
 import axios from 'axios'
-import validate from 'za-id-validator'
+// import validate from 'za-id-validator'
 // components
 import ButtonComponent from '../../components/Button'
 import FormikComponent from '../../components/Formik'
@@ -20,16 +20,16 @@ import { ADDRESS_ISSUER_URL } from '../../utils'
 
 const apiURL = ADDRESS_ISSUER_URL + '/credential-email'
 
-const idValidation = data => {
-  const errors = {}
+// const idValidation = data => {
+//   const errors = {}
 
-  if (validate(data.id_number)) {
-  } else {
-    errors.id_number = 'Invalid ZA ID number!'
-  }
+//   if (validate(data.id_number)) {
+//   } else {
+//     errors.id_number = 'Invalid ZA ID number!'
+//   }
 
-  return errors
-}
+//   return errors
+// }
 
 const GetCredentialEmailForm = () => {
   const [submitting, setSubmitting] = useState(false)
@@ -63,9 +63,9 @@ const GetCredentialEmailForm = () => {
       <div style={{ marginTop: '1rem' }}>
         <FormikComponent
           initialValues={{
-            id_number: '',
-            first_names: '',
-            surname: '',
+            // id_number: '',
+            // first_names: '',
+            // surname: '',
             statement_issuer: '',
             statement_date: '',
             address_line_1: '',
@@ -76,7 +76,7 @@ const GetCredentialEmailForm = () => {
             expiry_date: '',
             email: '',
           }}
-          validate={idValidation}
+          // validate={idValidation}
           onSubmit={(values, { resetForm }) => {
             sendOffer(values)
             // resetForm()
@@ -84,7 +84,7 @@ const GetCredentialEmailForm = () => {
         >
           {({ values, handleChange, touched, errors }) => (
             <FormComponent>
-              <div>
+              {/* <div>
                 <TextFieldComponent
                   error={touched.id_number && Boolean(errors.id_number)}
                   helperText={touched.id_number && errors.id_number}
@@ -117,7 +117,7 @@ const GetCredentialEmailForm = () => {
                   sx={{ m: '1rem' }}
                   required
                 />
-              </div>
+              </div> */}
 
               <div>
                 <FormControl sx={{ width: '16.5rem' }}>

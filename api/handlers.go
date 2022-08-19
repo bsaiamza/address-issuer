@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -356,14 +357,16 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 		}
 
 		// Step 7: Send email
-		prefix := string(userInfo.IDNumber[6])
-		if prefix >= "5" {
-			prefix = "Mr "
-		} else {
-			prefix = "Ms/Mrs "
-		}
+		// prefix := string(userInfo.IDNumber[6])
+		// if prefix >= "5" {
+		// 	prefix = "Mr "
+		// } else {
+		// 	prefix = "Ms/Mrs "
+		// }
 
-		err = utils.SendCredentialByEmail(prefix+userInfo.Surname, userInfo.Email, invitation.Invitation.RecipientKeys[0], qrCodePng)
+		prefix := "Mr/Ms/Mrs "
+
+		err = utils.SendCredentialByEmail(prefix+userInfo.Surname, userInfo.Email, invitation.Invitation.RecipientKeys[0], qrCodePng, config)
 		if err != nil {
 			log.Warning.Print("Failed to send credential by email: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -450,14 +453,226 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 					return
 				}
 
-				err = cache.UpdateString(userInfo.IDNumber, request.ConnectionID)
+				// err = cache.UpdateString(userInfo.IDNumber, request.ConnectionID)
+				// if err != nil {
+				// 	log.Error.Printf("Failed to cache connID %s", err)
+				// 	w.WriteHeader(http.StatusBadRequest)
+				// 	return
+				// }
+
+				// credentialRequest := models.IssueCredentialRequest{
+				// 	AutoRemove:      false,
+				// 	ConnectionID:    request.ConnectionID,
+				// 	Comment:         "Physical Address Credential",
+				// 	CredDefID:       config.GetCredDefID(),
+				// 	IssuerDid:       config.GetPublicDID(),
+				// 	SchemaID:        config.GetSchemaID(),
+				// 	SchemaIssuerDid: config.GetPublicDID(),
+				// 	SchemaName:      config.GetSchemaName(),
+				// 	SchemaVersion:   config.GetSchemaVersion(),
+				// 	Trace:           false,
+				// 	CredentialProposal: models.CredentialProposal{
+				// 		Type: "issue-credential/1.0/credential-preview",
+				// 		Attributes: []models.Attribute{
+				// 			{
+				// 				Name:  "ID Number",
+				// 				Value: userInfo.IDNumber,
+				// 			},
+				// 			{
+				// 				Name:  "First Names",
+				// 				Value: userInfo.FirstNames,
+				// 			},
+				// 			{
+				// 				Name:  "Surname",
+				// 				Value: userInfo.Surname,
+				// 			},
+				// 			{
+				// 				Name:  "Statement Issuer",
+				// 				Value: userInfo.StatementIssuer,
+				// 			},
+				// 			{
+				// 				Name:  "Statement Date",
+				// 				Value: userInfo.StatementDate,
+				// 			},
+				// 			{
+				// 				Name:  "Address Line 1",
+				// 				Value: userInfo.AddressLine1,
+				// 			},
+				// 			{
+				// 				Name:  "Address Line 2",
+				// 				Value: userInfo.AddressLine2,
+				// 			},
+				// 			{
+				// 				Name:  "Address Line 3",
+				// 				Value: userInfo.AddressLine3,
+				// 			},
+				// 			{
+				// 				Name:  "City",
+				// 				Value: userInfo.City,
+				// 			},
+				// 			{
+				// 				Name:  "Postal Code",
+				// 				Value: userInfo.PostalCode,
+				// 			},
+				// 			{
+				// 				Name:  "Expiry Date",
+				// 				Value: userInfo.ExpiryDate,
+				// 			},
+				// 		},
+				// 	},
+				// }
+
+				// _, err = client.IssueCredential(credentialRequest)
+				// if err != nil {
+				// 	log.Error.Printf("Failed to send credential offer: %s", err)
+				// 	w.WriteHeader(http.StatusBadRequest)
+				// 	return
+				// }
+
+				// // For email credential notification
+				// err = cache.UpdateStruct(request.ConnectionID, userInfo)
+				// if err != nil {
+				// 	log.Error.Printf("Failed to cache user data: %s", err)
+				// 	w.WriteHeader(http.StatusInternalServerError)
+				// 	return
+				// }
+
+				// cache.DeleteStruct(request.InvitationKey)
+
+				// log.Info.Println("Credential offer sent")
+				// w.WriteHeader(http.StatusOK)
+
+				credDefID := config.GetCornerstoneCredDefID()
+
+				idProof := map[string]interface{}{
+					"name": "ID Number",
+					"restrictions": []map[string]interface{}{
+						{
+							"cred_def_id": credDefID,
+						},
+					},
+				}
+
+				namesProof := map[string]interface{}{
+					"name": "First Names",
+					"restrictions": []map[string]interface{}{
+						{
+							"cred_def_id": credDefID,
+						},
+					},
+				}
+
+				surnameProof := map[string]interface{}{
+					"name": "Surname",
+					"restrictions": []map[string]interface{}{
+						{
+							"cred_def_id": credDefID,
+						},
+					},
+				}
+
+				identityProofRequest := models.ProofRequest{
+					Comment:      "Cornerstone Proof Request",
+					ConnectionID: request.ConnectionID,
+					PresentationRequest: models.PresentationRequest{
+						Name:    "Proof of Identity",
+						Version: "1.0",
+						RequestedAttributes: models.RequestedAttributes{
+							idProof,
+							namesProof,
+							surnameProof,
+						},
+						RequestedPredicates: models.RequestedPredicates{},
+					},
+				}
+
+				_, err = client.SendProofRequest(identityProofRequest)
 				if err != nil {
-					log.Error.Printf("Failed to cache connID %s", err)
+					log.Error.Printf("Failed to send proof request: %s", err)
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
 
-				credentialRequest := models.IssueCredentialRequest{
+				err = cache.UpdateStruct(request.ConnectionID, userInfo)
+				if err != nil {
+					log.Error.Printf("Failed to cache user data: %s", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				cache.DeleteStruct(request.InvitationKey)
+
+				log.Info.Println("Proof request sent")
+				w.WriteHeader(http.StatusOK)
+			}
+
+		case "issue_credential":
+			var request models.IssueCredentialWebhookResponse
+			err := json.NewDecoder(r.Body).Decode(&request)
+			if err != nil {
+				log.Error.Printf("Failed to decode request body: %s", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			userInfo, err := cache.ReadStruct(request.ConnectionID)
+			if err != nil {
+				log.Error.Printf("Failed to read cached user data: %s", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			if request.State == "credential_issued" && userInfo.Email != "" {
+				log.Info.Println("Sending credential issued notification...")
+
+				// prefix := string(userInfo.IDNumber[6])
+				// if prefix >= "5" {
+				// 	prefix = "Mr "
+				// } else {
+				// 	prefix = "Ms/Mrs "
+				// }
+
+				prefix := "Mr/Ms/Mrs"
+
+				err = utils.SendNotificationEmail(prefix+userInfo.Surname, userInfo.Email, config)
+				if err != nil {
+					log.Error.Printf("Failed to send credential notification email: %s", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				cache.DeleteStruct(request.ConnectionID)
+
+				log.Info.Println("Notified user successfully about issued credential!")
+				w.WriteHeader(http.StatusOK)
+			}
+
+		case "present_proof":
+			var request models.PresentProofWebhookResponse
+			err := json.NewDecoder(r.Body).Decode(&request)
+			if err != nil {
+				log.Error.Printf("Failed to decode request body: %s", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			userInfo, err := cache.ReadStruct(request.ConnectionID)
+			if err != nil {
+				log.Error.Printf("Failed to read cached user data: %s", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			if request.State == "verified" {
+				presExRecord, err := client.GetPresExRecord(request.PresentationExchangeID)
+				if err != nil {
+					log.Error.Printf("Failed to get presentation record: %s", err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+
+				if presExRecord.Verified == "true" {
+					credentialRequest := models.IssueCredentialRequest{
 					AutoRemove:      false,
 					ConnectionID:    request.ConnectionID,
 					Comment:         "Physical Address Credential",
@@ -471,18 +686,6 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 					CredentialProposal: models.CredentialProposal{
 						Type: "issue-credential/1.0/credential-preview",
 						Attributes: []models.Attribute{
-							{
-								Name:  "ID Number",
-								Value: userInfo.IDNumber,
-							},
-							{
-								Name:  "First Names",
-								Value: userInfo.FirstNames,
-							},
-							{
-								Name:  "Surname",
-								Value: userInfo.Surname,
-							},
 							{
 								Name:  "Statement Issuer",
 								Value: userInfo.StatementIssuer,
@@ -519,6 +722,7 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 					},
 				}
 
+				fmt.Println("step 5")
 				_, err = client.IssueCredential(credentialRequest)
 				if err != nil {
 					log.Error.Printf("Failed to send credential offer: %s", err)
@@ -527,59 +731,15 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 				}
 
 				// For email credential notification
-				err = cache.UpdateStruct(request.ConnectionID, userInfo)
-				if err != nil {
-					log.Error.Printf("Failed to cache user data: %s", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
+				if userInfo.Email == "" {
+					cache.DeleteStruct(request.ConnectionID)
 				}
-
-				cache.DeleteStruct(request.InvitationKey)
 
 				log.Info.Println("Credential offer sent")
 				w.WriteHeader(http.StatusOK)
-			}
-
-		case "issue_credential":
-			var request models.IssueCredentialWebhookResponse
-			err := json.NewDecoder(r.Body).Decode(&request)
-			if err != nil {
-				log.Error.Printf("Failed to decode request body: %s", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			userInfo, err := cache.ReadStruct(request.ConnectionID)
-			if err != nil {
-				log.Error.Printf("Failed to read cached user data: %s", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			if request.State == "credential_issued" && userInfo.Email != "" {
-				log.Info.Println("Sending credential issued notification...")
-
-				prefix := string(userInfo.IDNumber[6])
-				if prefix >= "5" {
-					prefix = "Mr "
-				} else {
-					prefix = "Ms/Mrs "
 				}
-
-				err = utils.SendNotificationEmail(prefix+userInfo.Surname, userInfo.Email)
-				if err != nil {
-					log.Error.Printf("Failed to send credential notification email: %s", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-
-				cache.DeleteStruct(request.ConnectionID)
-
-				log.Info.Println("Notified user successfully about issued credential!")
-				w.WriteHeader(http.StatusOK)
 			}
 
-		case "present_proof":
 		case "basicmessages":
 		case "revocation_registry":
 		case "problem_report":

@@ -7,13 +7,19 @@ metadata:
 data:
   # acapy variables
   ACAPY_URL: "http://address-issuer-agent.address-issuer.svc.cluster.local:8001" # socket - ?
-  SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:1.1"
+  # SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:1.1"
+  SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:2.2"
   SCHEMA_NAME: "Physical_Address_Credential"
-  SCHEMA_VERSION: "1.1"
-  CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:52293:IAMZA Physical Address Credential"
+  # SCHEMA_VERSION: "1.1"
+  SCHEMA_VERSION: "2.2"
+  # CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:52293:IAMZA Physical Address Credential"
+  CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:52641:IAMZA Physical Address Credential"
   PUBLIC_DID: "Y8X9iqAn2kYN5cce3Jgcjp"
+  CORNERSTONE_CRED_DEF_ID: "BER7WwiAMK9igkiRjPYpEp:3:CL:52285:IAMZA Cornerstone Credential"
   # ACAPY_ADMIN_API_KEY: secret
   # client variables
   # CLIENT_URL: "http://address-issuer-agent.address-issuer.svc.cluster.local:3000" # socket
   # server variables
   SERVER_ADDRESS: 0.0.0.0:8180
+  EMAIL_USERNAME: aws_iamzanet@bankservafrica.com
+  EMAIL_PASSWORD: K5fEoXa88
