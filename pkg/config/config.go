@@ -35,10 +35,22 @@ func (c *Config) GetCredDefID() string {
 	return getEnvVarByName("CRED_DEF_ID")
 }
 
+func (c *Config) GetCornerstoneCredDefID() string {
+	return getEnvVarByName("CORNERSTONE_CRED_DEF_ID")
+}
+
 func (c *Config) GetPublicDID() string {
 	return getEnvVarByName("PUBLIC_DID")
 }
 
 func (c *Config) GetServerAddress() string {
 	return getEnvVarByName("SERVER_ADDRESS")
+}
+
+func (c *Config) GetEmailUsername() string {
+	return getEnvVarByName("EMAIL_USERNAME")
+}
+
+func (c *Config) GetEmailPassword() string {
+	return getEnvVarByName("EMAIL_PASSWORD")
 }
