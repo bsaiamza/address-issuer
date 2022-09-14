@@ -38,3 +38,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: address-issuer-configmap
+          env:
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: addressissuersecret
+                  key: emailpw
