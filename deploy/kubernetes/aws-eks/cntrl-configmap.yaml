@@ -22,4 +22,4 @@ data:
   # server variables
   SERVER_ADDRESS: 0.0.0.0:8180
   EMAIL_USERNAME: aws_iamzanet@bankservafrica.com
-#  EMAIL_PASSWORD: K5fEoXa88
+#  EMAIL_PASSWORD: 
