@@ -44,3 +44,18 @@ spec:
                 secretKeyRef:
                   name: addressissuersecret
                   key: emailpw
+            - name: EMAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: addressissuersecret
+                  key: emailusername
+            - name: EMAIL_SMTP_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: addressissuersecret
+                  key: emailsmtpserver
+            - name: EMAIL_SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: addressissuersecret
+                  key: emailsmtpport
