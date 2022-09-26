@@ -16,10 +16,7 @@ data:
   CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:52641:IAMZA Physical Address Credential"
   PUBLIC_DID: "Y8X9iqAn2kYN5cce3Jgcjp"
   CORNERSTONE_CRED_DEF_ID: "BER7WwiAMK9igkiRjPYpEp:3:CL:52285:IAMZA Cornerstone Credential"
-  # ACAPY_ADMIN_API_KEY: secret
   # client variables
   # CLIENT_URL: "http://address-issuer-agent.address-issuer.svc.cluster.local:3000" # socket
   # server variables
   SERVER_ADDRESS: 0.0.0.0:8180
-  EMAIL_USERNAME: aws_iamzanet@bankservafrica.com
-#  EMAIL_PASSWORD: 

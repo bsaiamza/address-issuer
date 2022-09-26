@@ -54,3 +54,11 @@ func (c *Config) GetEmailUsername() string {
 func (c *Config) GetEmailPassword() string {
 	return getEnvVarByName("EMAIL_PASSWORD")
 }
+
+func (c *Config) GetSmtpServer() string {
+	return getEnvVarByName("EMAIL_SMTP_SERVER")
+}
+
+func (c *Config) GetSmtpPort() string {
+	return getEnvVarByName("EMAIL_SMTP_PORT")
+}
