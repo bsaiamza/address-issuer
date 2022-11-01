@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"address_issuer/pkg/log"
+	"address-issuer/pkg/log"
 )
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc

@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"address_issuer/pkg/log"
+	"address-issuer/pkg/log"
 )
 
 func GracefulServerExit(callback func()) {

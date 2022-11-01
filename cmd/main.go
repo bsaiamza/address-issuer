@@ -1,12 +1,12 @@
 package main
 
 import (
-	"address_issuer/api"
-	"address_issuer/pkg/client"
-	"address_issuer/pkg/config"
-	"address_issuer/pkg/log"
-	"address_issuer/pkg/server"
-	"address_issuer/pkg/utils"
+	"address-issuer/api"
+	"address-issuer/pkg/acapy"
+	"address-issuer/pkg/config"
+	"address-issuer/pkg/log"
+	"address-issuer/pkg/server"
+	"address-issuer/pkg/utils"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 
 func runServer() {
 	config := config.LoadConfig()
-	acapyClient := client.NewClient(config.GetAcapyURL())
+	acapyClient := acapy.NewClient(config.GetAcapyURL())
 	cache := utils.NewBigCache()
 
 	srv := server.NewServer().

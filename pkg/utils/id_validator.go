@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-// func IDValidator(id, gender, countryOfBirth string) (string, error) {
 func IDValidator(id string) (string, error) {
 	err := validChecksum(id)
 	if err != nil {

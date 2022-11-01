@@ -1,13 +1,14 @@
 package api
 
 import (
-	"address_issuer/pkg/client"
-	"address_issuer/pkg/config"
-	"address_issuer/pkg/utils"
 	"embed"
 	"fmt"
 	"io/fs"
 	"net/http"
+
+	"address-issuer/pkg/acapy"
+	"address-issuer/pkg/config"
+	"address-issuer/pkg/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -15,16 +16,13 @@ import (
 //go:embed build
 var embeddedFiles embed.FS
 
-func NewRouter(config *config.Config, client *client.Client, cache *utils.BigCache) *mux.Router {
+func NewRouter(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) *mux.Router {
 	r := mux.NewRouter()
 
-	path := r.PathPrefix("/api/v1/address-issuer").Subrouter()
-	path.HandleFunc("/health", health(config))
-	path.HandleFunc("/connections", listConnections(config, client))
-	path.HandleFunc("/credentials", listCredentials(config, client))
-	path.HandleFunc("/credential", getCredential(config, client, cache))
-	path.HandleFunc("/credential-email", getCredentialByEmail(config, client, cache))
-	path.HandleFunc("/topic/{topic}/", webhookEvents(config, client, cache))
+	path := r.PathPrefix("/api/v2/address-issuer").Subrouter()
+	path.HandleFunc("/credential", getCredential(config, acapy, cache))
+	path.HandleFunc("/email-credential", getCredentialByEmail(config, acapy, cache))
+	path.HandleFunc("/topic/{topic}/", webhookEvents(config, acapy, cache))
 
 	r.PathPrefix("/").Handler(http.FileServer(getFileSystem()))
 

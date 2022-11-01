@@ -2,149 +2,29 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
+	"time"
 
-	"address_issuer/pkg/client"
-	"address_issuer/pkg/config"
-	"address_issuer/pkg/log"
-	"address_issuer/pkg/models"
-	"address_issuer/pkg/server"
-	"address_issuer/pkg/utils"
+	"address-issuer/pkg/acapy"
+	"address-issuer/pkg/config"
+	"address-issuer/pkg/log"
+	"address-issuer/pkg/models"
+	"address-issuer/pkg/server"
+	"address-issuer/pkg/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/skip2/go-qrcode"
 )
 
-func health(config *config.Config) http.HandlerFunc {
+func getCredential(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) http.HandlerFunc {
 	mdw := []server.Middleware{
 		server.LogAPIRequest,
 	}
 
-	return server.ChainMiddleware(healthHandler(config), mdw...)
+	return server.ChainMiddleware(getCredentialHandler(config, acapy, cache), mdw...)
 }
-func healthHandler(config *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}
-}
-
-func listConnections(config *config.Config, client *client.Client) http.HandlerFunc {
-	mdw := []server.Middleware{
-		server.LogAPIRequest,
-	}
-
-	return server.ChainMiddleware(listConnectionsHandler(config, client), mdw...)
-}
-func listConnectionsHandler(config *config.Config, client *client.Client) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		header := w.Header()
-		header.Add("Access-Control-Allow-Origin", "*")
-		header.Add("Access-Control-Allow-Methods", "GET, OPTIONS")
-		header.Add("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if r.Method != http.MethodGet {
-			log.Warning.Print("Incorrect request method!")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			res := server.Response{
-				"success": false,
-				"msg":     "Warning: Incorrect request method!",
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-
-		defer r.Body.Close()
-
-		log.Info.Println("Listing connections...")
-
-		connections, err := client.ListConnections()
-		if err != nil {
-			log.Error.Printf("Failed to list connections: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			res := server.Response{
-				"success": false,
-				"msg":     "Failed to list connections: " + err.Error(),
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-
-		log.Info.Print("Connections listed successfully!")
-
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(connections.Results)
-	}
-}
-
-func listCredentials(config *config.Config, client *client.Client) http.HandlerFunc {
-	mdw := []server.Middleware{
-		server.LogAPIRequest,
-	}
-
-	return server.ChainMiddleware(listCredentialsHandler(config, client), mdw...)
-}
-func listCredentialsHandler(config *config.Config, client *client.Client) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		header := w.Header()
-		header.Add("Access-Control-Allow-Origin", "*")
-		header.Add("Access-Control-Allow-Methods", "GET, OPTIONS")
-		header.Add("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		if r.Method != http.MethodGet {
-			log.Warning.Print("Incorrect request method!")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			res := server.Response{
-				"success": false,
-				"msg":     "Warning: Incorrect request method!",
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-
-		defer r.Body.Close()
-
-		log.Info.Println("Listing credentials records...")
-
-		records, err := client.ListCredentialRecords()
-		if err != nil {
-			log.Error.Printf("Failed to list credential records: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			res := server.Response{
-				"success": false,
-				"msg":     "Failed to list credential records: " + err.Error(),
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-
-		log.Info.Print("Credential records listed successfully!")
-
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(records.Results)
-	}
-}
-
-func getCredential(config *config.Config, client *client.Client, cache *utils.BigCache) http.HandlerFunc {
-	mdw := []server.Middleware{
-		server.LogAPIRequest,
-	}
-
-	return server.ChainMiddleware(getCredentialHandler(config, client, cache), mdw...)
-}
-func getCredentialHandler(config *config.Config, client *client.Client, cache *utils.BigCache) http.HandlerFunc {
+func getCredentialHandler(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
 		header.Add("Access-Control-Allow-Origin", "*")
@@ -171,9 +51,9 @@ func getCredentialHandler(config *config.Config, client *client.Client, cache *u
 
 		log.Info.Println("Creating credential request...")
 
-		// Step 1: Retrieve user information
-		var userInfo models.AddressCredentialRequest
-		err := json.NewDecoder(r.Body).Decode(&userInfo)
+		// Step 1: Retrieve address information
+		var addrInfo models.AddressCredentialRequest
+		err := json.NewDecoder(r.Body).Decode(&addrInfo)
 		if err != nil {
 			log.Error.Printf("Failed to decode credential data: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -185,26 +65,10 @@ func getCredentialHandler(config *config.Config, client *client.Client, cache *u
 			return
 		}
 
-		// Step 2: Validate ID number
-		log.Info.Println("Validating ID number...")
-		validID := userInfo.IDNumber
-		_, err = utils.IDValidator(validID)
-		if err != nil {
-			log.Error.Printf("ID validation failed: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			res := server.Response{
-				"success": false,
-				"msg":     "ID validation failed: " + err.Error(),
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-		log.Info.Println("ID Validation passed")
-
-		// Step 3: Create Invitation
+		// Step 2: Create Invitation
 		invitationRequest := models.CreateInvitationRequest{}
 
-		invitation, err := client.CreateInvitation(invitationRequest)
+		invitation, err := acapy.CreateInvitation(invitationRequest)
 		if err != nil {
 			log.Error.Printf("Failed to create invitation: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -216,14 +80,14 @@ func getCredentialHandler(config *config.Config, client *client.Client, cache *u
 			return
 		}
 
-		// Step 4: Cache user data for webhookEventsHandler
-		err = cache.UpdateStruct(invitation.Invitation.RecipientKeys[0], userInfo)
+		// Step 3: Cache address data for webhookEventsHandler
+		err = cache.Address(invitation.Invitation.RecipientKeys[0], addrInfo)
 		if err != nil {
-			log.Error.Printf("Failed to cache user data: %s", err)
+			log.Error.Printf("Failed to cache address data: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			res := server.Response{
 				"success": false,
-				"msg":     "Failed to cache user data: " + err.Error(),
+				"msg":     "Failed to cache address data: " + err.Error(),
 			}
 			json.NewEncoder(w).Encode(res)
 			return
@@ -238,14 +102,14 @@ func getCredentialHandler(config *config.Config, client *client.Client, cache *u
 	}
 }
 
-func getCredentialByEmail(config *config.Config, client *client.Client, cache *utils.BigCache) http.HandlerFunc {
+func getCredentialByEmail(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) http.HandlerFunc {
 	mdw := []server.Middleware{
 		server.LogAPIRequest,
 	}
 
-	return server.ChainMiddleware(getCredentialByEmailHandler(config, client, cache), mdw...)
+	return server.ChainMiddleware(getCredentialByEmailHandler(config, acapy, cache), mdw...)
 }
-func getCredentialByEmailHandler(config *config.Config, client *client.Client, cache *utils.BigCache) http.HandlerFunc {
+func getCredentialByEmailHandler(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
 		header.Add("Access-Control-Allow-Origin", "*")
@@ -272,9 +136,9 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 
 		log.Info.Println("Creating credential request...")
 
-		// Step 1: Retrieve user information
-		var userInfo models.AddressCredentialRequest
-		err := json.NewDecoder(r.Body).Decode(&userInfo)
+		// Step 1: Retrieve address information
+		var addrInfo models.AddressCredentialRequest
+		err := json.NewDecoder(r.Body).Decode(&addrInfo)
 		if err != nil {
 			log.Error.Printf("Failed to decode credential data: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -287,7 +151,7 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 		}
 
 		// Step 2: Validate email address
-		err = utils.ValidEmail(userInfo.Email)
+		err = utils.ValidEmail(addrInfo.Email)
 		if err != nil {
 			log.Error.Printf("Failed %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -299,26 +163,10 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 			return
 		}
 
-		// Step 3: Validate ID number
-		log.Info.Println("Validating ID number...")
-		validID := userInfo.IDNumber
-		_, err = utils.IDValidator(validID)
-		if err != nil {
-			log.Error.Printf("ID validation failed: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			res := server.Response{
-				"success": false,
-				"msg":     "ID validation failed: " + err.Error(),
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-		log.Info.Println("ID Validation passed")
-
-		// Step 4: Create Invitation
+		// Step 3: Create Invitation
 		invitationRequest := models.CreateInvitationRequest{}
 
-		invitation, err := client.CreateInvitation(invitationRequest)
+		invitation, err := acapy.CreateInvitation(invitationRequest)
 		if err != nil {
 			log.Error.Printf("Failed to create invitation: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -330,8 +178,8 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 			return
 		}
 
-		// Step 5: Cache user data
-		err = cache.UpdateStruct(invitation.Invitation.RecipientKeys[0], userInfo)
+		// Step 4: Cache address data for webhookEventsHandler
+		err = cache.Address(invitation.Invitation.RecipientKeys[0], addrInfo)
 		if err != nil {
 			log.Error.Printf("Failed to cache user data: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -343,7 +191,7 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 			return
 		}
 
-		// Step 6: Generate a qr code for email
+		// Step 5: Generate a qr code for email
 		qrCodePng, err := qrcode.Encode(invitation.InvitationURL, qrcode.Medium, 256)
 		if err != nil {
 			log.Warning.Print("Failed to create QR code: ", err)
@@ -356,17 +204,8 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 			return
 		}
 
-		// Step 7: Send email
-		// prefix := string(userInfo.IDNumber[6])
-		// if prefix >= "5" {
-		// 	prefix = "Mr "
-		// } else {
-		// 	prefix = "Ms/Mrs "
-		// }
-
-		prefix := "Mr/Ms/Mrs "
-
-		err = utils.SendCredentialByEmail(prefix+userInfo.Surname, userInfo.Email, invitation.Invitation.RecipientKeys[0], qrCodePng, config)
+		// Step 6: Send email
+		err = utils.SendCredentialByEmail(addrInfo.Email, invitation.Invitation.RecipientKeys[0], qrCodePng, config)
 		if err != nil {
 			log.Warning.Print("Failed to send credential by email: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -378,7 +217,7 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 			return
 		}
 
-		// Step 8: Remove qr from os
+		// Step 7: Remove qr from os once email is sent
 		err = os.Remove("./" + invitation.Invitation.RecipientKeys[0] + ".png")
 		if err != nil {
 			log.Warning.Print("Failed to remove QR code: ", err)
@@ -388,14 +227,14 @@ func getCredentialByEmailHandler(config *config.Config, client *client.Client, c
 	}
 }
 
-func webhookEvents(config *config.Config, client *client.Client, cache *utils.BigCache) http.HandlerFunc {
+func webhookEvents(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) http.HandlerFunc {
 	mdw := []server.Middleware{
 		server.LogAPIRequest,
 	}
 
-	return server.ChainMiddleware(webhookEventsHandler(config, client, cache), mdw...)
+	return server.ChainMiddleware(webhookEventsHandler(config, acapy, cache), mdw...)
 }
-func webhookEventsHandler(config *config.Config, client *client.Client, cache *utils.BigCache) http.HandlerFunc {
+func webhookEventsHandler(config *config.Config, acapy *acapy.Client, cache *utils.BigCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
 		header.Add("Access-Control-Allow-Origin", "*")
@@ -437,7 +276,7 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 					Comment: "Ping",
 				}
 
-				_, err := client.PingConnection(request.ConnectionID, pingRequest)
+				_, err := acapy.PingConnection(request.ConnectionID, pingRequest)
 				if err != nil {
 					log.Error.Printf("Failed to ping holder: %s", err)
 					w.WriteHeader(http.StatusInternalServerError)
@@ -446,127 +285,29 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 			}
 
 			if request.State == "active" {
-				userInfo, err := cache.ReadStruct(request.InvitationKey)
+				addrInfo, err := cache.ReadAddress(request.InvitationKey)
 				if err != nil {
 					log.Error.Printf("Failed to read cached user data: %s", err)
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
 
-				// err = cache.UpdateString(userInfo.IDNumber, request.ConnectionID)
-				// if err != nil {
-				// 	log.Error.Printf("Failed to cache connID %s", err)
-				// 	w.WriteHeader(http.StatusBadRequest)
-				// 	return
-				// }
-
-				// credentialRequest := models.IssueCredentialRequest{
-				// 	AutoRemove:      false,
-				// 	ConnectionID:    request.ConnectionID,
-				// 	Comment:         "Physical Address Credential",
-				// 	CredDefID:       config.GetCredDefID(),
-				// 	IssuerDid:       config.GetPublicDID(),
-				// 	SchemaID:        config.GetSchemaID(),
-				// 	SchemaIssuerDid: config.GetPublicDID(),
-				// 	SchemaName:      config.GetSchemaName(),
-				// 	SchemaVersion:   config.GetSchemaVersion(),
-				// 	Trace:           false,
-				// 	CredentialProposal: models.CredentialProposal{
-				// 		Type: "issue-credential/1.0/credential-preview",
-				// 		Attributes: []models.Attribute{
-				// 			{
-				// 				Name:  "ID Number",
-				// 				Value: userInfo.IDNumber,
-				// 			},
-				// 			{
-				// 				Name:  "First Names",
-				// 				Value: userInfo.FirstNames,
-				// 			},
-				// 			{
-				// 				Name:  "Surname",
-				// 				Value: userInfo.Surname,
-				// 			},
-				// 			{
-				// 				Name:  "Statement Issuer",
-				// 				Value: userInfo.StatementIssuer,
-				// 			},
-				// 			{
-				// 				Name:  "Statement Date",
-				// 				Value: userInfo.StatementDate,
-				// 			},
-				// 			{
-				// 				Name:  "Address Line 1",
-				// 				Value: userInfo.AddressLine1,
-				// 			},
-				// 			{
-				// 				Name:  "Address Line 2",
-				// 				Value: userInfo.AddressLine2,
-				// 			},
-				// 			{
-				// 				Name:  "Address Line 3",
-				// 				Value: userInfo.AddressLine3,
-				// 			},
-				// 			{
-				// 				Name:  "City",
-				// 				Value: userInfo.City,
-				// 			},
-				// 			{
-				// 				Name:  "Postal Code",
-				// 				Value: userInfo.PostalCode,
-				// 			},
-				// 			{
-				// 				Name:  "Expiry Date",
-				// 				Value: userInfo.ExpiryDate,
-				// 			},
-				// 		},
-				// 	},
-				// }
-
-				// _, err = client.IssueCredential(credentialRequest)
-				// if err != nil {
-				// 	log.Error.Printf("Failed to send credential offer: %s", err)
-				// 	w.WriteHeader(http.StatusBadRequest)
-				// 	return
-				// }
-
-				// // For email credential notification
-				// err = cache.UpdateStruct(request.ConnectionID, userInfo)
-				// if err != nil {
-				// 	log.Error.Printf("Failed to cache user data: %s", err)
-				// 	w.WriteHeader(http.StatusInternalServerError)
-				// 	return
-				// }
-
-				// cache.DeleteStruct(request.InvitationKey)
-
-				// log.Info.Println("Credential offer sent")
-				// w.WriteHeader(http.StatusOK)
-
-				credDefID := config.GetCornerstoneCredDefID()
-
-				idProof := map[string]interface{}{
-					"name": "ID Number",
-					"restrictions": []map[string]interface{}{
-						{
-							"cred_def_id": credDefID,
-						},
-					},
-				}
+				schemaID := config.GetCornerstoneSchemaID()
 
 				namesProof := map[string]interface{}{
-					"name": "First Names",
+					"name": "names",
 					"restrictions": []map[string]interface{}{
 						{
-							"cred_def_id": credDefID,
+							"schema_id": schemaID,
 						},
 					},
 				}
 
 				surnameProof := map[string]interface{}{
-					"name": "Surname",
+					"name": "surname",
 					"restrictions": []map[string]interface{}{
 						{
-							"cred_def_id": credDefID,
+							"schema_id": schemaID,
 						},
 					},
 				}
@@ -578,7 +319,6 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 						Name:    "Proof of Identity",
 						Version: "1.0",
 						RequestedAttributes: models.RequestedAttributes{
-							idProof,
 							namesProof,
 							surnameProof,
 						},
@@ -586,24 +326,23 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 					},
 				}
 
-				_, err = client.SendProofRequest(identityProofRequest)
+				_, err = acapy.SendProofRequest(identityProofRequest)
 				if err != nil {
 					log.Error.Printf("Failed to send proof request: %s", err)
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
 
-				err = cache.UpdateStruct(request.ConnectionID, userInfo)
+				err = cache.Address(request.ConnectionID, addrInfo)
 				if err != nil {
 					log.Error.Printf("Failed to cache user data: %s", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
 
-				cache.DeleteStruct(request.InvitationKey)
+				cache.DeleteAddress(request.InvitationKey)
 
 				log.Info.Println("Proof request sent")
-				w.WriteHeader(http.StatusOK)
 			}
 
 		case "issue_credential":
@@ -615,7 +354,7 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 				return
 			}
 
-			userInfo, err := cache.ReadStruct(request.ConnectionID)
+			userInfo, err := cache.ReadAddress(request.ConnectionID)
 			if err != nil {
 				log.Error.Printf("Failed to read cached user data: %s", err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -625,26 +364,16 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 			if request.State == "credential_issued" && userInfo.Email != "" {
 				log.Info.Println("Sending credential issued notification...")
 
-				// prefix := string(userInfo.IDNumber[6])
-				// if prefix >= "5" {
-				// 	prefix = "Mr "
-				// } else {
-				// 	prefix = "Ms/Mrs "
-				// }
-
-				prefix := "Mr/Ms/Mrs"
-
-				err = utils.SendNotificationEmail(prefix+userInfo.Surname, userInfo.Email, config)
+				err = utils.SendNotificationEmail(userInfo.Email, config)
 				if err != nil {
 					log.Error.Printf("Failed to send credential notification email: %s", err)
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
 
-				cache.DeleteStruct(request.ConnectionID)
+				cache.DeleteAddress(request.ConnectionID)
 
 				log.Info.Println("Notified user successfully about issued credential!")
-				w.WriteHeader(http.StatusOK)
 			}
 
 		case "present_proof":
@@ -656,7 +385,7 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 				return
 			}
 
-			userInfo, err := cache.ReadStruct(request.ConnectionID)
+			addrInfo, err := cache.ReadAddress(request.ConnectionID)
 			if err != nil {
 				log.Error.Printf("Failed to read cached user data: %s", err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -664,7 +393,7 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 			}
 
 			if request.State == "verified" {
-				presExRecord, err := client.GetPresExRecord(request.PresentationExchangeID)
+				presExRecord, err := acapy.GetPresExRecord(request.PresentationExchangeID)
 				if err != nil {
 					log.Error.Printf("Failed to get presentation record: %s", err)
 					w.WriteHeader(http.StatusBadRequest)
@@ -672,71 +401,91 @@ func webhookEventsHandler(config *config.Config, client *client.Client, cache *u
 				}
 
 				if presExRecord.Verified == "true" {
+					log.Info.Println("Cornerstone Credential Verification: Successful!")
+
+					sdJSON, _ := time.Parse("2006-01-02T15:04:05.999Z", addrInfo.StatementDate)
+					sd := sdJSON.Format("20060102")
+
+					now := time.Now()
+					threeMonths := time.Hour * 24 * 90
+					expiryPeriod := now.Add(threeMonths)
+					ed := expiryPeriod.Format("20060102")
+
+					si64 := utils.ImageBase64()
+					si := ""
+
+					if addrInfo.StatementImage == "" {
+						si = si64
+					}
+
 					credentialRequest := models.IssueCredentialRequest{
-					AutoRemove:      false,
-					ConnectionID:    request.ConnectionID,
-					Comment:         "Physical Address Credential",
-					CredDefID:       config.GetCredDefID(),
-					IssuerDid:       config.GetPublicDID(),
-					SchemaID:        config.GetSchemaID(),
-					SchemaIssuerDid: config.GetPublicDID(),
-					SchemaName:      config.GetSchemaName(),
-					SchemaVersion:   config.GetSchemaVersion(),
-					Trace:           false,
-					CredentialProposal: models.CredentialProposal{
-						Type: "issue-credential/1.0/credential-preview",
-						Attributes: []models.Attribute{
-							{
-								Name:  "Statement Issuer",
-								Value: userInfo.StatementIssuer,
-							},
-							{
-								Name:  "Statement Date",
-								Value: userInfo.StatementDate,
-							},
-							{
-								Name:  "Address Line 1",
-								Value: userInfo.AddressLine1,
-							},
-							{
-								Name:  "Address Line 2",
-								Value: userInfo.AddressLine2,
-							},
-							{
-								Name:  "Address Line 3",
-								Value: userInfo.AddressLine3,
-							},
-							{
-								Name:  "City",
-								Value: userInfo.City,
-							},
-							{
-								Name:  "Postal Code",
-								Value: userInfo.PostalCode,
-							},
-							{
-								Name:  "Expiry Date",
-								Value: userInfo.ExpiryDate,
+						AutoRemove:      false,
+						ConnectionID:    request.ConnectionID,
+						Comment:         "Physical Address Credential",
+						CredDefID:       config.GetCredDefID(),
+						IssuerDid:       config.GetPublicDID(),
+						SchemaID:        config.GetSchemaID(),
+						SchemaIssuerDid: config.GetPublicDID(),
+						SchemaName:      config.GetSchemaName(),
+						SchemaVersion:   config.GetSchemaVersion(),
+						Trace:           false,
+						CredentialProposal: models.CredentialProposal{
+							Type: "issue-credential/1.0/credential-preview",
+							Attributes: []models.Attribute{
+								{
+									Name:  "address_line",
+									Value: addrInfo.AddressLine,
+								},
+								{
+									Name:  "city",
+									Value: addrInfo.City,
+								},
+								{
+									Name:  "province",
+									Value: addrInfo.Province,
+								},
+								{
+									Name:  "postal_code",
+									Value: addrInfo.PostalCode,
+								},
+								{
+									Name:  "country_code",
+									Value: addrInfo.CountryCode,
+								},
+								{
+									Name:  "statement_date",
+									Value: sd,
+								},
+								{
+									Name:  "expiry_date",
+									Value: ed,
+								},
+								{
+									Name:  "statement_image",
+									Value: si,
+								},
+								{
+									Name:  "self_attested",
+									Value: addrInfo.SelfAttested,
+								},
 							},
 						},
-					},
-				}
+					}
 
-				fmt.Println("step 5")
-				_, err = client.IssueCredential(credentialRequest)
-				if err != nil {
-					log.Error.Printf("Failed to send credential offer: %s", err)
-					w.WriteHeader(http.StatusBadRequest)
-					return
-				}
+					_, err = acapy.IssueCredential(credentialRequest)
+					if err != nil {
+						log.Error.Printf("Failed to send credential offer: %s", err)
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
 
-				// For email credential notification
-				if userInfo.Email == "" {
-					cache.DeleteStruct(request.ConnectionID)
-				}
+					if addrInfo.Email == "" {
+						cache.DeleteAddress(request.ConnectionID)
+					}
 
-				log.Info.Println("Credential offer sent")
-				w.WriteHeader(http.StatusOK)
+					log.Info.Println("Credential offer sent")
+				} else {
+					log.Info.Println("Cornerstone Credential Verification: Unsuccessful!")
 				}
 			}
 

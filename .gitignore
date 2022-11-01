@@ -17,7 +17,7 @@
 .idea/
 venv/
 
-# Cornerstone Issuer
+# Address Issuer
 # Files
 *.log
 web/package-lock.json
@@ -26,3 +26,4 @@ web/package-lock.json
 .vscode/
 bin/
 web/node_modules/
+web/build/

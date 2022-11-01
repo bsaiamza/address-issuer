@@ -35,8 +35,8 @@ func (c *Config) GetCredDefID() string {
 	return getEnvVarByName("CRED_DEF_ID")
 }
 
-func (c *Config) GetCornerstoneCredDefID() string {
-	return getEnvVarByName("CORNERSTONE_CRED_DEF_ID")
+func (c *Config) GetCornerstoneSchemaID() string {
+	return getEnvVarByName("CORNERSTONE_SCHEMA_ID")
 }
 
 func (c *Config) GetPublicDID() string {

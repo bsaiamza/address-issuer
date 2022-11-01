@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"address_issuer/pkg/config"
-	"address_issuer/pkg/log"
+	"address-issuer/pkg/config"
+	"address-issuer/pkg/log"
 
 	mailV2 "github.com/xhit/go-simple-mail/v2"
 )
@@ -25,7 +25,7 @@ func ValidEmail(email string) error {
 	return nil
 }
 
-func SendCredentialByEmail(name, recipientEmail, qrImgName string, qrCode []byte, config *config.Config) error {
+func SendCredentialByEmail(recipientEmail, qrImgName string, qrCode []byte, config *config.Config) error {
 	img, _, err := image.Decode(bytes.NewReader(qrCode))
 	if err != nil {
 		log.ServerError.Printf("Failed to decode qr code: %s", err.Error())
@@ -43,12 +43,12 @@ func SendCredentialByEmail(name, recipientEmail, qrImgName string, qrCode []byte
 		<html>
 			<head>
 				<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-				<title>IAMZA Address Issuer</title>
+				<title>Physical Address Issuer</title>
 			</head>
 
 			<body>
 				<p>
-					Hi ` + name + `
+					Hi
 				</p>
 				<p>
 					Please scan the following <b>QR Code</b> with your wallet app to get your <b>Physical Address Credential</b>:
@@ -59,7 +59,7 @@ func SendCredentialByEmail(name, recipientEmail, qrImgName string, qrCode []byte
 				<p>
 					Regards
 					<br/>
-					IAMZA Address Issuer
+					Physical Address Issuer
 				</p>
 			</body>
 		</html>
@@ -122,17 +122,17 @@ func SendCredentialByEmail(name, recipientEmail, qrImgName string, qrCode []byte
 	return nil
 }
 
-func SendNotificationEmail(name, recipientEmail string, config *config.Config) error {
+func SendNotificationEmail(recipientEmail string, config *config.Config) error {
 	htmlBody := `
 		<html>
 			<head>
 				<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-				<title>IAMZA Address Issuer</title>
+				<title>Physical Address Issuer</title>
 			</head>
 
 			<body>
 				<p>
-					Hi ` + name + `
+					Hi
 				</p>
 				<p>
 					Please note that your Physical Address Credential has been issued and should be stored in your wallet.
@@ -140,7 +140,7 @@ func SendNotificationEmail(name, recipientEmail string, config *config.Config) e
 				<p>
 					Regards
 					<br/>
-					IAMZA Address Issuer
+					Physical Address Issuer
 				</p>
 			</body>
 		</html>
