@@ -44,11 +44,6 @@ spec:
                 secretKeyRef:
                   name: addressissuersecret
                   key: emailpw
-            - name: EMAIL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: addressissuersecret
-                  key: emailpw
             - name: EMAIL_USERNAME
               valueFrom:
                 secretKeyRef:
