@@ -1,10 +1,10 @@
 # docker commands
 build_docker:
-	docker build -t address-issuer:0.2.0 .
-	docker tag address-issuer:0.2.0 149875424875.dkr.ecr.af-south-1.amazonaws.com/address-issuer:0.2.0
+	docker build -t address-issuer:latest .
+	docker tag address-issuer:latest 149875424875.dkr.ecr.af-south-1.amazonaws.com/address-issuer:latest
 
 push_docker:
-	docker push 149875424875.dkr.ecr.af-south-1.amazonaws.com/address-issuer:0.2.0
+	docker push 149875424875.dkr.ecr.af-south-1.amazonaws.com/address-issuer:latest
 
 # golang commands
 fmt:

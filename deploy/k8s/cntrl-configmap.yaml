@@ -7,11 +7,11 @@ metadata:
 data:
   # acapy variables
   ACAPY_URL: "http://address-issuer-agent.address-issuer.svc.cluster.local:8001" # socket - ?
-  SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:3.0"
+  SCHEMA_ID: "Y8X9iqAn2kYN5cce3Jgcjp:2:Physical_Address_Credential:1.0"
   SCHEMA_NAME: "Physical_Address_Credential"
-  SCHEMA_VERSION: "3.0"
-  CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:59784:Physical Address"
-  CORNERSTONE_SCHEMA_ID: "BER7WwiAMK9igkiRjPYpEp:2:Cornerstone_Credential:3.0"
+  SCHEMA_VERSION: "1.0"
+  CRED_DEF_ID: "Y8X9iqAn2kYN5cce3Jgcjp:3:CL:41751:Physical Address 1.0"
+  CORNERSTONE_SCHEMA_ID: "BER7WwiAMK9igkiRjPYpEp:2:Cornerstone_Credential:1.0"
   PUBLIC_DID: "Y8X9iqAn2kYN5cce3Jgcjp"
   # server variables
   SERVER_ADDRESS: 0.0.0.0:8180

@@ -27,4 +27,5 @@ web/package-lock.json
 bin/
 web/node_modules/
 web/build/
+web/src/pages/Credential/EnterDetailss.tsx
 api/build/

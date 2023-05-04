@@ -38,80 +38,7 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 
 	const [submitting, setSubmitting] = useState<boolean | undefined>(false)
 	const [input, setInput] = useState('')
-	const [streetNumber, setStreetNumber] = useState('')
-	const [streetName, setStreetName] = useState('')
-	const [area, setArea] = useState('')
-	const [locality, setLocality] = useState('')
-	const [city, setCity] = useState('')
-	const [province, setProvince] = useState('')
-	const [postalCode, setPostalCode] = useState('')
-	const [countryCode, setCountryCode] = useState('')
 	const [file, setFile] = useState(null)
-
-	const inputId = 'address'
-
-	useEffect(() => {
-		const renderGoogle = () => {
-			// @ts-ignore
-			window[inputId] = new window.google.maps.places.Autocomplete(document.getElementById(inputId), {})
-			const handlePlaceSelect = () => {
-				// @ts-ignore
-				const place = window[inputId].getPlace()
-				for (const component of place.address_components) {
-					const type = component.types[0]
-					switch (type) {
-						case 'street_number':
-							setStreetNumber(component.long_name)
-							break
-						case 'route':
-							setStreetName(component.long_name)
-							break
-						case 'sublocality_level_1':
-							setArea(component.long_name)
-							break
-						case 'locality':
-							setLocality(component.long_name)
-							break
-						case 'administrative_area_level_2':
-							setCity(component.long_name)
-							break
-						case 'administrative_area_level_1':
-							setProvince(component.short_name)
-							break
-						case 'postal_code':
-							setPostalCode(component.long_name)
-							break
-						case 'country':
-							setCountryCode(component.short_name)
-							break
-
-						default:
-							console.log('irrelevant component type')
-							break
-					}
-				}
-			}
-
-			//listen for place change in input field
-			// @ts-ignore
-			window[inputId].addListener('place_changed', handlePlaceSelect)
-		}
-
-		//if places script is already found then listen for load and then renderGoogle
-		let found = document.getElementById('placesScript') ? true : false
-		if (!found) {
-			const script = document.createElement('script')
-			script.id = 'placesScript'
-			script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAK + '&libraries=places'
-			script.async = true
-			script.onload = () => renderGoogle()
-			document.body.appendChild(script)
-		}
-		if (found) {
-			// @ts-ignore
-			document.getElementById('placesScript').addEventListener('load', renderGoogle)
-		}
-	}, [inputId, city, streetNumber, province])
 
 	const sendOffer = async (values: any) => {
 		setSubmitting(true)
@@ -183,11 +110,16 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 				<Paper
 					square
 					elevation={2}
-					sx={{ p: 5, width: { md: '100%' }, backgroundColor: theme.palette.mode === LIGHT_MODE_THEME ? '#fff' : '', borderRadius: 5 }}
-					>
+					sx={{
+						p: 5,
+						width: { md: '100%' },
+						backgroundColor: theme.palette.mode === LIGHT_MODE_THEME ? '#fff' : '',
+						borderRadius: 5,
+					}}>
 					<Formik
 						initialValues={{
 							address_line: '',
+							address_line_2: '',
 							city: '',
 							province: '',
 							postal_code: '',
@@ -205,25 +137,24 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 							<Form>
 								<div>
 									<TextField
-										id={inputId}
-										name='search'
-										label='Search for your address'
-										value={input}
-										onChange={(e) => setInput(e.target.value)}
-										sx={{ m: '1rem' }}
-										required
-										fullWidth
-									/>
-								</div>
-								<div>
-									<TextField
 										id='address_line'
 										name='address_line'
-										value={(values.address_line = streetNumber + ' ' + streetName + ' ' + area + ' ' + locality)}
+										value={values.address_line}
 										onChange={handleChange}
-										label='Address'
+										label='Address Line'
 										sx={{ m: '1rem', width: '70%', cursor: 'not-allowed' }}
-										disabled
+										required
+									/>
+								</div>
+
+								<div>
+									<TextField
+										id='address_line_2'
+										name='address_line_2'
+										value={values.address_line_2}
+										onChange={handleChange}
+										label='Address Line 2'
+										sx={{ m: '1rem', width: '70%', cursor: 'not-allowed' }}
 									/>
 								</div>
 
@@ -231,11 +162,11 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 									<TextField
 										id='city'
 										name='city'
-										value={(values.city = city)}
+										value={values.city}
 										onChange={handleChange}
 										label='City'
 										sx={{ m: '1rem', width: '70%', cursor: 'not-allowed' }}
-										disabled
+										required
 									/>
 								</div>
 
@@ -243,11 +174,11 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 									<TextField
 										id='province'
 										name='province'
-										value={(values.province = province)}
+										value={values.province}
 										onChange={handleChange}
 										label='Province'
 										sx={{ m: '1rem', width: '70%', cursor: 'not-allowed' }}
-										disabled
+										required
 									/>
 								</div>
 
@@ -255,11 +186,11 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 									<TextField
 										id='postal_code'
 										name='postal_code'
-										value={(values.postal_code = postalCode)}
+										value={values.postal_code}
 										onChange={handleChange}
 										label='Postal Code'
 										sx={{ m: '1rem', width: '70%', cursor: 'not-allowed' }}
-										disabled
+										required
 									/>
 								</div>
 
@@ -267,11 +198,11 @@ const EnterDetails = ({ handleNext }: EnterDetailsProps) => {
 									<TextField
 										id='country_code'
 										name='country_code'
-										value={(values.country_code = countryCode)}
+										value={values.country_code}
 										onChange={handleChange}
 										label='Country Code'
 										sx={{ m: '1rem', width: '70%', cursor: 'not-allowed' }}
-										disabled
+										required
 									/>
 								</div>
 
